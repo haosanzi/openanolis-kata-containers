@@ -19,6 +19,7 @@ use containerd_shim_protos::events::task::TaskOOM;
 use hypervisor::{dragonball::Dragonball, Hypervisor, HYPERVISOR_DRAGONBALL};
 use kata_types::config::{
     default::{DEFAULT_AGENT_LOG_PORT, DEFAULT_AGENT_VSOCK_PORT},
+    hypervisor::MemoryInfo,
     TomlConfig,
 };
 use resource::{
@@ -280,6 +281,10 @@ impl Sandbox for VirtSandbox {
         self.agent.agent_sock().await
     }
 
+    async fn meminfo(&self) -> Result<MemoryInfo> {
+        Ok(self.hypervisor.hypervisor_config().await.memory_info)
+    }
+
     async fn set_iptables(&self, is_ipv6: bool, data: Vec<u8>) -> Result<Vec<u8>> {
         info!(sl!(), "sb: set_iptables invoked");
         let req = SetIPTablesRequest { is_ipv6, data };
@@ -300,6 +305,13 @@ impl Sandbox for VirtSandbox {
             .await
             .context("sandbox: failed to get iptables")?;
         Ok(resp.data)
+    }
+
+    // todo: setup swap space in guest, when block device hot plug is supported
+    // todo: use memory_hotplug_byprobe between hotplug and online when supported
+    async fn update_mem_resource(&self, new_mem: u32, _swap_sz_byte: i64) -> Result<()> {
+        info!(sl!(), "requesting vmm to update memory to {:?}", new_mem);
+        Ok(())
     }
 }
 
