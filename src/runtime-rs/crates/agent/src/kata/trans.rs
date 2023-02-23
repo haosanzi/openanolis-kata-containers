@@ -27,7 +27,7 @@ use crate::{
         VersionCheckResponse, VolumeStatsRequest, VolumeStatsResponse, WaitProcessRequest,
         WriteStreamRequest,
     },
-    OomEventResponse, WaitProcessResponse, WriteStreamResponse,
+    GetGuestDetailsRequest, OomEventResponse, WaitProcessResponse, WriteStreamResponse,
 };
 
 fn trans_vec<F: Sized + Clone, T: From<F>>(from: Vec<F>) -> Vec<T> {
@@ -704,6 +704,16 @@ impl From<SetGuestDateTimeRequest> for agent::SetGuestDateTimeRequest {
         Self {
             Sec: from.sec,
             Usec: from.usec,
+            ..Default::default()
+        }
+    }
+}
+
+impl From<GetGuestDetailsRequest> for agent::GuestDetailsRequest {
+    fn from(from: GetGuestDetailsRequest) -> Self {
+        Self {
+            mem_block_size: from.mem_block_size,
+            mem_hotplug_probe: from.mem_hotplug_probe,
             ..Default::default()
         }
     }
