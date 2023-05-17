@@ -18,6 +18,7 @@ use oci::{Linux, LinuxResources};
 use persist::sandbox_persist::Persist;
 use tokio::sync::RwLock;
 
+use crate::cpu_mem::initial_size::InitialSizeManager;
 use crate::network::NetworkConfig;
 use crate::resource_persist::ResourceState;
 use crate::ResourceUpdateOp;
@@ -40,10 +41,12 @@ impl ResourceManager {
         agent: Arc<dyn Agent>,
         hypervisor: Arc<dyn Hypervisor>,
         toml_config: Arc<TomlConfig>,
+        init_size_manager: InitialSizeManager,
     ) -> Result<Self> {
         Ok(Self {
             inner: Arc::new(RwLock::new(
-                ResourceManagerInner::new(sid, agent, hypervisor, toml_config).await?,
+                ResourceManagerInner::new(sid, agent, hypervisor, toml_config, init_size_manager)
+                    .await?,
             )),
         })
     }
