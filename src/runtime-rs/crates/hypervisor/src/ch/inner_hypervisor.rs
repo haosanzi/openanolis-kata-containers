@@ -8,8 +8,8 @@ use crate::ch::utils::get_api_socket_path;
 use crate::ch::utils::{get_jailer_root, get_sandbox_path, get_vsock_path};
 use crate::device::DeviceType;
 use crate::kernel_param::KernelParams;
-use crate::VsockDevice;
 use crate::VM_ROOTFS_DRIVER_PMEM;
+use crate::{MemoryConfig, VsockDevice};
 use crate::{VcpuThreadIds, VmmState};
 use anyhow::{anyhow, Context, Result};
 use ch_config::ch_api::{
@@ -546,6 +546,14 @@ impl CloudHypervisorInner {
     }
 
     pub(crate) fn guest_memory_block_size_mb(&self) -> u32 {
+        todo!()
+    }
+
+    pub(crate) fn resize_memory(
+        &self,
+        _req_mem_mb: u32,
+        _curr_mem_mb: u32,
+    ) -> Result<(u32, MemoryConfig)> {
         todo!()
     }
 }
