@@ -85,11 +85,16 @@ impl MemResource {
         *current_mem = new_mem;
     }
 
+    async fn get_current_mem(&self) -> u32 {
+        let current_mem = self.current_mem.read().await;
+        *current_mem
+    }
+
     async fn total_mems(&self, use_guest_swap: bool) -> Result<(u32, bool, u32)> {
         // sb stands for sandbox
         let mut mem_sandbox = 0;
-        let mut need_pod_swap = false;
-        let mut swap_sandbox = 0;
+        let need_pod_swap = false;
+        let swap_sandbox = 0;
 
         let resources = self.container_mem_resources.read().await;
 
@@ -105,23 +110,8 @@ impl MemResource {
                     info!(sl!(), "memory sb: {}, memory limit: {}", mem_sandbox, limit);
                     limit
                 });
-
-                if let Some(swappiness) = memory.swappiness {
-                    if swappiness > 0 && use_guest_swap {
-                        if let Some(swap) = memory.swap {
-                            if swap > current_limit {
-                                swap_sandbox = swap.saturating_sub(current_limit);
-                            }
-                        }
-                        // if current_limit is 0, the container will have access to the entire memory available on the host system
-                        // so we add swap for this
-                        else if current_limit == 0 {
-                            need_pod_swap = true;
-                        } else {
-                            swap_sandbox += current_limit;
-                        }
-                    }
-                }
+                // TODO support memory guest swap
+                // https://github.com/kata-containers/kata-containers/issues/7293
             }
         }
 
@@ -160,8 +150,10 @@ impl MemResource {
         hypervisor: &dyn Hypervisor,
     ) -> Result<u32> {
         info!(sl!(), "requesting vmm to update memory to {:?}", new_mem);
+
+        let current_mem = self.get_current_mem().await;
         let (new_memory, _mem_config) = hypervisor
-            .resize_memory(new_mem)
+            .resize_memory(current_mem, new_mem)
             .await
             .context("resize memory")?;
 
